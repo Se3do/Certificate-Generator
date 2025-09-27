@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Certificate Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+    <div class="container">
+        <h2>Certificate Generator</h2>
+
+        <form id="certForm" method="post" enctype="multipart/form-data" action="/generate">
+            <label>Certificate Template:</label>
+            <input type="file" name="template" required>
+
+            <label>Excel File (with Names):</label>
+            <input type="file" name="excel" required>
+
+            <label>Font File (.ttf):</label>
+            <input type="file" name="font" id="fontFile" required>
+
+            <label>Font Size:</label>
+            <input type="number" name="font_size" id="fontSize" value="40" min="10" max="200" required>
+
+            <label>X Coordinate:</label>
+            <input type="number" id="coordX" min="0" value="100">
+
+            <label>Y Coordinate:</label>
+            <input type="number" id="coordY" min="0" value="100">
+
+            <input type="hidden" name="coords" id="coordsInput">
+
+            <button type="submit">Generate Certificates</button>
+        </form>
+
+        <h3>Preview</h3>
+        <canvas id="previewCanvas"></canvas>
+    </div>
+
+    <script>
+    let coords = {};
+    let fontSizeInput = document.getElementById('fontSize');
+    let fontFileInput = document.getElementById('fontFile');
+    let coordXInput = document.getElementById('coordX');
+    let coordYInput = document.getElementById('coordY');
+    let coordsInput = document.getElementById('coordsInput');
+    let canvas = document.getElementById("previewCanvas");
+    let ctx = canvas.getContext("2d");
+    let certImg = new Image();
+
+    // Load certificate template
+    document.querySelector('input[name="template"]').addEventListener("change", function(e) {
+        let reader = new FileReader();
+        reader.onload = function(event) {
+            certImg.onload = function() {
+                canvas.width = certImg.width;
+                canvas.height = certImg.height;
+                drawPreview();
+            };
+            certImg.src = event.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    });
+
+    // Redraw preview when inputs change
+    fontSizeInput.addEventListener("input", drawPreview);
+    coordXInput.addEventListener("input", drawPreview);
+    coordYInput.addEventListener("input", drawPreview);
+    fontFileInput.addEventListener("change", drawPreview);
+
+    async function drawPreview() {
+        if (!certImg.src) return;
+
+        let x = parseInt(coordXInput.value) || 0;
+        let y = parseInt(coordYInput.value) || 0;
+        coords["name"] = [x, y];
+        coordsInput.value = JSON.stringify(coords);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(certImg, 0, 0);
+
+        // Load font if user uploaded one
+        if (fontFileInput.files.length > 0) {
+            let fontFile = fontFileInput.files[0];
+            let fontUrl = URL.createObjectURL(fontFile);
+            let customFont = new FontFace("customFont", `url(${fontUrl})`);
+            await customFont.load();
+            document.fonts.add(customFont);
+            ctx.font = `${fontSizeInput.value || 40}px customFont`;
+        } else {
+            ctx.font = `${fontSizeInput.value || 40}px Arial`;
+        }
+
+        ctx.fillStyle = "black";
+        ctx.textAlign = "center";   // center horizontally
+        ctx.textBaseline = "middle"; // center vertically
+        ctx.fillText("Sample Name", x, y);
+    }
+    </script>
+</body>
+</html>
