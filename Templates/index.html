@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Certificate Generator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
 </head>
 <body>
     <div class="container">
@@ -22,6 +21,9 @@
 
             <label>Font Size:</label>
             <input type="number" name="font_size" id="fontSize" value="40" min="10" max="200" required>
+
+            <label>Text Color:</label>
+            <input type="color" name="font_color" id="fontColor" value="#000000">
 
             <label>X Coordinate:</label>
             <input type="number" id="coordX" min="0" value="100">
@@ -42,6 +44,7 @@
     let coords = {};
     let fontSizeInput = document.getElementById('fontSize');
     let fontFileInput = document.getElementById('fontFile');
+    let fontColorInput = document.getElementById('fontColor');
     let coordXInput = document.getElementById('coordX');
     let coordYInput = document.getElementById('coordY');
     let coordsInput = document.getElementById('coordsInput');
@@ -68,6 +71,7 @@
     coordXInput.addEventListener("input", drawPreview);
     coordYInput.addEventListener("input", drawPreview);
     fontFileInput.addEventListener("change", drawPreview);
+    fontColorInput.addEventListener("input", drawPreview);
 
     async function drawPreview() {
         if (!certImg.src) return;
@@ -92,7 +96,7 @@
             ctx.font = `${fontSizeInput.value || 40}px Arial`;
         }
 
-        ctx.fillStyle = "black";
+        ctx.fillStyle = fontColorInput.value;  // <--- use chosen color
         ctx.textAlign = "center";   // center horizontally
         ctx.textBaseline = "middle"; // center vertically
         ctx.fillText("Sample Name", x, y);

@@ -17,7 +17,9 @@ def generate():
 
     font_file = request.files['font']
     font_size = int(request.form.get("font_size", 40))
+    font_color = request.form.get("font_color", "#000000")  # default black
 
+    # Load font
     font_bytes = io.BytesIO(font_file.read())
     font = ImageFont.truetype(font_bytes, font_size)
 
@@ -30,21 +32,27 @@ def generate():
             text = str(row["Name"])
             x, y = coords["name"]
 
+            # Measure text size for centering
             bbox = draw.textbbox((0, 0), text, font=font)
             text_width = bbox[2] - bbox[0]
             text_height = bbox[3] - bbox[1]
-
             pos = (x - text_width // 2, y - text_height // 2)
 
-            draw.text(pos, text, font=font, fill="black")
+            # Draw text with chosen color
+            draw.text(pos, text, font=font, fill=font_color)
 
+            # Save into zip
             out = io.BytesIO()
             img.save(out, format="PNG")
             zf.writestr(f"{row['Name']}.png", out.getvalue())
 
     zip_buffer.seek(0)
-    return send_file(zip_buffer, mimetype="application/zip",
-                     as_attachment=True, download_name="certificates.zip")
+    return send_file(
+        zip_buffer,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name="certificates.zip"
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
